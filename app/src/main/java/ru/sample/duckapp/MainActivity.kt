@@ -44,7 +44,7 @@ class MainActivity : AppCompatActivity() {
         nextDuckButton = findViewById(R.id.nextDuckButton)
         httpCodeEditText = findViewById(R.id.httpCodeEditText)
         loadWaiter = findViewById(R.id.loadWaiter)
-        loadWaiter.setVisibility(View.GONE);
+        unlockScreen()
 
         duckWebView = findViewById(R.id.duckWebView)
 
@@ -65,11 +65,18 @@ class MainActivity : AppCompatActivity() {
         loadRandomDuck()
     }
 
-    private fun checkCode(code: Int): Boolean{
+    private fun lockScreen() {
+        loadWaiter.setVisibility(View.VISIBLE);
+    }
+    private fun unlockScreen() {
+        loadWaiter.setVisibility(View.GONE);
+    }
+
+    private fun checkCode(code: Int): Boolean {
         return httpCodes.contains(code);
     }
 
-    private fun setImg(imgStream: InputStream){
+    private fun setImg(imgStream: InputStream) {
         val imgageBase64: String = Base64.encodeToString(
             IOUtils.toByteArray(
                 imgStream
@@ -85,7 +92,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadRandomDuck() {
-        loadWaiter.setVisibility(View.VISIBLE);
+        lockScreen()
         Api.ducksApi.getRandomDuck().enqueue(object : Callback<Duck> {
             override fun onResponse(call: Call<Duck>, response: Response<Duck>) {
                 if (response.isSuccessful) {
@@ -102,31 +109,30 @@ class MainActivity : AppCompatActivity() {
                                 } else {
                                     report("Что-то пошло не так.")
                                 }
-                                loadWaiter.setVisibility(View.GONE);
+                                unlockScreen()
                             }
 
                             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                                 report("Не удалось подключиться к сайту.")
-                                loadWaiter.setVisibility(View.GONE);
+                                unlockScreen()
                             }
                         })
                     }
                 } else {
                     report("Что-то пошло не так.")
+                    unlockScreen()
                 }
-
-                loadWaiter.setVisibility(View.GONE);
             }
 
             override fun onFailure(call: Call<Duck>, t: Throwable) {
                 report("Не удалось подключиться к сайту.")
-                loadWaiter.setVisibility(View.GONE);
+                unlockScreen()
             }
         })
     }
 
     private fun loadDuckByCode(httpCode: Int) {
-        loadWaiter.setVisibility(View.VISIBLE);
+        lockScreen()
         Api.ducksApi.getDuckImageByCode(httpCode).enqueue(object : Callback<ResponseBody> {
             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                 if (response.isSuccessful) {
@@ -137,12 +143,12 @@ class MainActivity : AppCompatActivity() {
                 } else {
                     report("Такой уточки нет(")
                 }
-                loadWaiter.setVisibility(View.GONE);
+                unlockScreen()
             }
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                 report("Не удалось подключиться к сайту.")
-                loadWaiter.setVisibility(View.GONE);
+                unlockScreen()
             }
         })
     }
