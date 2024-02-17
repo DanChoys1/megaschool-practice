@@ -17,6 +17,7 @@
         android:theme="@style/Theme.DuckApp"
         tools:targetApi="31">
         <activity
+            android:configChanges="orientation|screenSize"
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
