@@ -1,12 +1,10 @@
 package ru.sample.duckapp
 
-import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.util.Base64
 import android.webkit.WebView
 import android.widget.Button
 import android.widget.EditText
-import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.crashlytics.buildtools.reloc.org.apache.commons.io.IOUtils
@@ -16,13 +14,16 @@ import retrofit2.Callback
 import retrofit2.Response
 import ru.sample.duckapp.domain.Duck
 import ru.sample.duckapp.infra.Api
+import java.io.InputStream
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var duckImageView: ImageView
     private lateinit var nextDuckButton: Button
     private lateinit var httpCodeEditText: EditText
 
-    private lateinit var webview: WebView
+    private lateinit var duckWebView: WebView
+
+    private var imgPlaceholder = "IMAGE_PLACEHOLDER"
+    private var html = "<html><body><img style='height: 100%; width: 100%; object-fit: contain' src='$imgPlaceholder' /></body></html>"
 
     val httpCodes = intArrayOf(
         100, 101, 102, 103,
@@ -37,10 +38,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        duckImageView = findViewById(R.id.duckImageView)
         nextDuckButton = findViewById(R.id.nextDuckButton)
         httpCodeEditText = findViewById(R.id.httpCodeEditText)
-        webview = findViewById(R.id.webView)
+        duckWebView = findViewById(R.id.duckWebView)
 
         nextDuckButton.setOnClickListener {
             val httpCode = httpCodeEditText.text.toString()
@@ -55,10 +55,27 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+
+        loadRandomDuck()
     }
 
     private fun checkCode(code: Int): Boolean{
         return httpCodes.contains(code);
+    }
+
+    private fun setImg(imgStream: InputStream){
+        val imgageBase64: String = Base64.encodeToString(
+            IOUtils.toByteArray(
+                imgStream
+            ), Base64.DEFAULT)
+        val image = "data:image/png;base64,$imgageBase64"
+        duckWebView.loadDataWithBaseURL(
+            "file:///android_asset/",
+            html.replace(imgPlaceholder, image),
+            "text/html",
+            "utf-8",
+            ""
+        )
     }
 
     private fun loadRandomDuck() {
@@ -73,22 +90,7 @@ class MainActivity : AppCompatActivity() {
                                 if (response.isSuccessful) {
                                     val imageStream = response.body()?.byteStream()
                                     if (imageStream != null) {
-//                                        val bitmap = BitmapFactory.decodeStream(imageStream)
-//                                        duckImageView.setImageBitmap(bitmap)
-                                        val imgageBase64: String = Base64.encodeToString(
-                                            IOUtils.toByteArray(
-                                                imageStream
-                                            ), Base64.DEFAULT)
-                                        val image = "data:image/png;base64,$imgageBase64"
-                                        var html = "<html><body><img width=100% height=100% src='{IMAGE_PLACEHOLDER}' /></body></html>"
-                                        html = html.replace("{IMAGE_PLACEHOLDER}", image)
-                                        webview.loadDataWithBaseURL(
-                                            "file:///android_asset/",
-                                            html,
-                                            "text/html",
-                                            "utf-8",
-                                            ""
-                                        )
+                                        setImg(imageStream)
                                     }
                                 } else {
                                     report("Что-то пошло не так.")
@@ -118,8 +120,7 @@ class MainActivity : AppCompatActivity() {
                 if (response.isSuccessful) {
                     val imageStream = response.body()?.byteStream()
                     if (imageStream != null) {
-                        val bitmap = BitmapFactory.decodeStream(imageStream)
-                        duckImageView.setImageBitmap(bitmap)
+                        setImg(imageStream)
                     }
                 } else {
                     report("Такой уточки нет(")
