@@ -111,10 +111,11 @@ class MainActivity : AppCompatActivity() {
                             }
                         })
                     }
-                }
-                else {
+                } else {
                     report("Что-то пошло не так.")
                 }
+
+                loadWaiter.setVisibility(View.GONE);
             }
 
             override fun onFailure(call: Call<Duck>, t: Throwable) {
